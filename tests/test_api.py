@@ -15,7 +15,7 @@ class ApiTest(AsyncHTTPTestCase):
         return app
 
     def setUp(self):
-        super().setUp()
+        super(ApiTest, self).setUp()
         # self.app = make_app()
         self.api = Api(self._app)
 
