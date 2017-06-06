@@ -4,6 +4,16 @@ from tornado.web import Application, RequestHandler
 from tornado_restplus import Api
 
 
+class BaseEchoHandler(RequestHandler):
+    def initialize(self, reply):
+        self.reply = reply
+
+    def get(self):
+        # Lets include class name in response so that we can be
+        # sure that we have response from specific handler
+        self.write('{} {}'.format(self.__class__.__name__, self.reply))
+
+
 def make_app():
     return Application()
 
@@ -37,74 +47,91 @@ class ApiTest(AsyncHTTPTestCase):
     def test_namespace_multiple_routes(self):
         ns = self.api.namespace('api')
 
-        class BaseTestHandler(RequestHandler):
-            def initialize(self, reply):
-                self.reply = reply
-
-            def get(self):
-                self.write(self.reply)
-
         @ns.route('/first_handler', reply='[1]')
-        class FirstTestHandler(BaseTestHandler):
+        class FirstTestHandler(BaseEchoHandler):
             pass
 
         @ns.route('/second_handler', reply='[2]')
-        class SecondTestHandler(BaseTestHandler):
+        class SecondTestHandler(BaseEchoHandler):
             pass
 
         @ns.route('/third_handler', reply='[3]')
-        class ThirdTestHandler(BaseTestHandler):
+        class ThirdTestHandler(BaseEchoHandler):
             pass
 
         response = self.fetch('/api/first_handler')
         assert response.code == 200
-        assert response.body == b'[1]'
+        assert response.body == b'FirstTestHandler [1]'
         response = self.fetch('/api/second_handler')
         assert response.code == 200
-        assert response.body == b'[2]'
+        assert response.body == b'SecondTestHandler [2]'
         response = self.fetch('/api/third_handler')
         assert response.code == 200
-        assert response.body == b'[3]'
+        assert response.body == b'ThirdTestHandler [3]'
 
     def test_multiple_namespaces(self):
         ns1 = self.api.namespace('first_api')
         ns2 = self.api.namespace('sedond_api')
 
-        class BaseTestHandler(RequestHandler):
-            def initialize(self, reply):
-                self.reply = reply
-
-            def get(self):
-                self.write(self.reply)
-
         @ns1.route('/first_handler', reply='[1]')
-        class FirstTestHandler(BaseTestHandler):
+        class FirstTestHandler(BaseEchoHandler):
             pass
 
         @ns1.route('/second_handler', reply='[2]')
-        class SecondTestHandler(BaseTestHandler):
+        class SecondTestHandler(BaseEchoHandler):
             pass
 
         @ns2.route('/third_handler', reply='[3]')
-        class ThirdTestHandler(BaseTestHandler):
+        class ThirdTestHandler(BaseEchoHandler):
             pass
 
         @ns2.route('/fourth_handler', reply='[4]')
-        class FourthTestHandler(BaseTestHandler):
+        class FourthTestHandler(BaseEchoHandler):
             pass
 
         response = self.fetch('/first_api/first_handler')
         assert response.code == 200
-        assert response.body == b'[1]'
+        assert response.body == b'FirstTestHandler [1]'
         response = self.fetch('/first_api/second_handler')
         assert response.code == 200
-        assert response.body == b'[2]'
+        assert response.body == b'SecondTestHandler [2]'
         response = self.fetch('/sedond_api/third_handler')
         assert response.code == 200
-        assert response.body == b'[3]'
+        assert response.body == b'ThirdTestHandler [3]'
         response = self.fetch('/sedond_api/fourth_handler')
         assert response.code == 200
-        assert response.body == b'[4]'
+        assert response.body == b'FourthTestHandler [4]'
+
+    def test_multiple_routes(self):
+        ns = self.api.namespace('api')
+
+        @ns.route('/first_route_first_handler', reply='[1]')
+        @ns.route('/second_route_first_handler', reply='[2]')
+        @ns.route('/third_route_first_handler', reply='[3]')
+        class FirstTestHandler(BaseEchoHandler):
+            pass
+
+        @ns.route('/first_route_second_handler', reply='[4]')
+        @ns.route('/second_route_second_handler', reply='[5]')
+        class SecondTestHandler(BaseEchoHandler):
+            pass
+
+        response = self.fetch('/api/first_route_first_handler')
+        assert response.code == 200
+        assert response.body == b'FirstTestHandler [1]'
+        response = self.fetch('/api/second_route_first_handler')
+        assert response.code == 200
+        assert response.body == b'FirstTestHandler [2]'
+        response = self.fetch('/api/third_route_first_handler')
+        assert response.code == 200
+        assert response.body == b'FirstTestHandler [3]'
+
+        response = self.fetch('/api/first_route_second_handler')
+        assert response.code == 200
+        assert response.body == b'SecondTestHandler [4]'
+        response = self.fetch('/api/second_route_second_handler')
+        assert response.code == 200
+        assert response.body == b'SecondTestHandler [5]'
 
 
 class ApiLazyLoadingTest(AsyncHTTPTestCase):
