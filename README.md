@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/d21d3q/tornado-restplus.svg?branch=master)](https://travis-ci.org/d21d3q/tornado-restplus)
 # tornado-restplus
 Framework inspired by flask-restplus
 
