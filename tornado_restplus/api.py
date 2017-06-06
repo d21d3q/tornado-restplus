@@ -157,4 +157,4 @@ class Api(object):
     def _register_view(self, app, resource, *urls, **kwargs):
         for url in urls:
             # print(url, resource)
-            self.app.add_handlers(r'.*', [(url, resource, kwargs)])
+            app.add_handlers(r'.*', [(url, resource, kwargs)])
