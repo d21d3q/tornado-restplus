@@ -1,4 +1,5 @@
 import logging
+from apispec import APISpec
 
 from .namespace import Namespace
 
@@ -51,7 +52,7 @@ class Api(object):
                                                 api=self,
                                                 path='/')
         self.ns_paths = dict()
-
+        self.spec = APISpec(title, version, plugins=['apispec.ext.tornado'])
         # self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         # self.default_mediatype = default_mediatype
@@ -78,11 +79,16 @@ class Api(object):
 
         :param tornado.Application app: the Tornado application object
         :param str title: The API title (used in Swagger documentation)
-        :param str description: The API description (used in Swagger documentation)
-        :param str terms_url: The API terms page URL (used in Swagger documentation)
-        :param str contact: A contact email for the API (used in Swagger documentation)
-        :param str license: The license associated to the API (used in Swagger documentation)
-        :param str license_url: The license page URL (used in Swagger documentation)
+        :param str description: The API description (used in Swagger
+                                documentation)
+        :param str terms_url: The API terms page URL (used in Swagger
+                              documentation)
+        :param str contact: A contact email for the API (used in Swagger
+                            documentation)
+        :param str license: The license associated to the API (used in Swagger
+                            documentation)
+        :param str license_url: The license page URL (used in Swagger
+                                documentation)
 
         '''
         self.title = kwargs.get('title', self.title)
@@ -106,8 +112,7 @@ class Api(object):
         '''
 
         if len(self.resources) > 0:
-            for resource, urls, kwargs in self.resources:
-                self._register_view(app, resource, *urls, **kwargs)
+            self._register_view(app, self.resources)
 
     def get_ns_path(self, ns):
         return self.ns_paths.get(ns)
@@ -118,8 +123,9 @@ class Api(object):
 
     def add_namespace(self, ns, path=None):
         '''
-        This method registers resources from namespace for current instance of api.
-        You can use argument path for definition custom prefix url for namespace.
+        This method registers resources from namespace for current instance of
+        api. You can use argument path for definition custom prefix url for
+        namespace.
 
         :param Namespace ns: the namespace
         :param path: registration prefix of namespace
@@ -133,8 +139,8 @@ class Api(object):
                 self.ns_paths[ns] = path
         # Register resources
         for resource, urls, kwargs in ns.resources:
-            self.register_resource(ns, resource, *self.ns_urls(ns, urls), **kwargs)
-
+            self.register_resource(ns, resource, *self.ns_urls(ns, urls),
+                                   **kwargs)
 
     def namespace(self, *args, **kwargs):
         '''
@@ -147,14 +153,15 @@ class Api(object):
         return ns
 
     def register_resource(self, namespace, resource, *urls, **kwargs):
+        urlspecs = []
+        for url in urls:
+            urlspecs.append((url, resource, kwargs))
 
         if self.app is not None:
-            self._register_view(self.app, resource, *urls, **kwargs)
+            self._register_view(self.app, urlspecs)
         else:
-            self.resources.append((resource, urls, kwargs))
-        # return endpoint
+            self.resources.extend(urlspecs)
+        return urlspecs
 
-    def _register_view(self, app, resource, *urls, **kwargs):
-        for url in urls:
-            # print(url, resource)
-            app.add_handlers(r'.*', [(url, resource, kwargs)])
+    def _register_view(self, app, urlspecs):
+        app.add_handlers(r'.*', urlspecs)

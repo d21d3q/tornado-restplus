@@ -44,11 +44,16 @@ class Namespace(object):
         :param Resource resource: the resource ro register
         :param str urls: one or more url routes to match for the resource,
                          standard flask routing rules apply.
-                         Any url variables will be passed to the resource method as args.
-        :param str endpoint: endpoint name (defaults to :meth:`Resource.__name__.lower`
-            Can be used to reference this route in :class:`fields.Url` fields
-        :param list|tuple resource_class_args: args to be forwarded to the constructor of the resource.
-        :param dict resource_class_kwargs: kwargs to be forwarded to the constructor of the resource.
+                         Any url variables will be passed to the resource
+                         method as args.
+        :param str endpoint: endpoint name (defaults to
+                                            :meth:`Resource.__name__.lower`)
+                             Can be used to reference this route in
+                             :class:`fields.Url` fields
+        :param list|tuple resource_class_args: args to be forwarded to the
+                                               constructor of the resource.
+        :param dict resource_class_kwargs: kwargs to be forwarded to the
+                                           constructor of the resource.
 
         Additional keyword arguments not specified above will be passed as-is
         to :meth:`flask.Flask.add_url_rule`.
@@ -60,18 +65,32 @@ class Namespace(object):
             namespace.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
         self.resources.append((resource, urls, kwargs))
+        urlspecs = []
         for api in self.apis:
             ns_urls = api.ns_urls(self, urls)
-            api.register_resource(self, resource, *ns_urls, **kwargs)
+            urlspecs.extend(api.register_resource(self, resource, *ns_urls,
+                                                  **kwargs))
+        return urlspecs
 
     def route(self, *urls, **kwargs):
         '''
         A decorator to route resources.
         '''
         def wrapper(cls):
-            # doc = kwargs.pop('doc', None)
-            # if doc is not None:
+            # if 'doc' in kwargs:
             #     self._handle_api_doc(cls, doc)
-            self.add_resource(cls, *urls, **kwargs)
+            doc = kwargs.pop('doc', None)
+            urlspecs = self.add_resource(cls, *urls, **kwargs)
+            if doc is not None:
+                if isinstance(doc, bool):
+                    if doc:
+                        for urlspec in urlspecs:
+                            for api in self.apis:
+                                api.spec.add_path(urlspec=urlspec)
+                    else:
+                        pass
+                else:
+                    # TODO handle documentation as string?
+                    pass
             return cls
         return wrapper

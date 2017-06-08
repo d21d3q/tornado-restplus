@@ -3,16 +3,7 @@ from tornado.web import Application, RequestHandler
 
 from tornado_restplus import Api
 
-
-class BaseEchoHandler(RequestHandler):
-    def initialize(self, reply):
-        self.reply = reply
-
-    def get(self):
-        # Lets include class name in response so that we can be
-        # sure that we have response from specific handler
-        self.write('{} {}'.format(self.__class__.__name__, self.reply))
-
+from tests.common import BaseEchoHandler
 
 def make_app():
     return Application()
@@ -133,6 +124,37 @@ class ApiTest(AsyncHTTPTestCase):
         assert response.code == 200
         assert response.body == b'SecondTestHandler [5]'
 
+    def test_multiple_paths_in_single_route(self):
+        ns = self.api.namespace('api')
+
+        @ns.route('/first_path_first_handler',
+                  '/second_path_first_handler',
+                  '/third_path_first_handler', reply='[1]')
+        class FirstTestHandler(BaseEchoHandler):
+            pass
+
+        @ns.route('/first_path_second_handler',
+                  '/second_path_second_handler',
+                  reply='[2]')
+        class SecondTestHandler(BaseEchoHandler):
+            pass
+
+        response = self.fetch('/api/first_path_first_handler')
+        assert response.code == 200
+        assert response.body == b'FirstTestHandler [1]'
+        response = self.fetch('/api/second_path_first_handler')
+        assert response.code == 200
+        assert response.body == b'FirstTestHandler [1]'
+        response = self.fetch('/api/third_path_first_handler')
+        assert response.code == 200
+        assert response.body == b'FirstTestHandler [1]'
+
+        response = self.fetch('/api/first_path_second_handler')
+        assert response.code == 200
+        assert response.body == b'SecondTestHandler [2]'
+        response = self.fetch('/api/second_path_second_handler')
+        assert response.code == 200
+        assert response.body == b'SecondTestHandler [2]'
 
 class ApiLazyLoadingTest(AsyncHTTPTestCase):
     def get_app(self):
