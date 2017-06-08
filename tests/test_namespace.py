@@ -5,13 +5,10 @@ from tornado_restplus import Api
 
 from tests.common import BaseEchoHandler
 
-def make_app():
-    return Application()
-
 
 class ApiTest(AsyncHTTPTestCase):
     def get_app(self):
-        app = make_app()
+        app = Application()
         self.api = Api(app)
         return app
 
@@ -162,7 +159,7 @@ class ApiLazyLoadingTest(AsyncHTTPTestCase):
         # but in order to keep convention and not touch _prefixed
         # variables, lets store it under self.app in ordef to use it later
         # for api initialization
-        self.app = make_app()
+        self.app = Application()
         return self.app
 
     def test_lazy_loading(self):
