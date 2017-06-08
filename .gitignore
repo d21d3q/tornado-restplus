@@ -8,3 +8,21 @@ venv/
 
 # Unit test / coverage reports
 .cache
+
+# Distribution / packaging
+.Python
+env/
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+cover
+*.egg-info/
+.installed.cfg
+*.egg
