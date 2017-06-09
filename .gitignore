@@ -10,6 +10,7 @@ venv/
 .cache
 .coverage
 htmlcov/
+coverage.xml
 
 # Distribution / packaging
 .Python
