@@ -2,7 +2,7 @@
 from tornado.web import Application, RequestHandler
 from tornado.testing import AsyncHTTPTestCase
 
-from tornado_restplus import Api
+from tornado_restplus import Api, Namespace
 
 from tests.common import BaseEchoHandler
 
@@ -52,3 +52,24 @@ class ApiTest(AsyncHTTPTestCase):
         response = self.fetch('/api/some_endpoint')
         assert response.code == 200
         assert response.body == b'SomeHandler [0]'
+
+    def test_namepsace_path(self):
+        api = Api(self.app, prefix='/api')
+        ns1 = Namespace('ns1_prefix')
+        ns2 = Namespace('ns1_prefix')
+
+        @ns1.route('/endpoint1', reply='[0]')
+        @ns2.route('/endpoint2', reply='[1]')
+        class SomeHandler(BaseEchoHandler):
+            pass
+
+        api.add_namespace(ns1, path='/n1s_path')
+        api.add_namespace(ns2, path='/ns2_path')
+
+        response = self.fetch('/api/n1s_path/endpoint1')
+        assert response.code == 200
+        assert response.body == b'SomeHandler [0]'
+
+        response = self.fetch('/api/ns2_path/endpoint2')
+        assert response.code == 200
+        assert response.body == b'SomeHandler [1]'
