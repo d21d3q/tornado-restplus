@@ -7,7 +7,7 @@ install_requires = ['tornado', 'apispec']
 
 setup(
     name='tornado-restplus',
-    version='0.0.1dev',
+    version='0.0.1dev0',
     url='https://github.com/d21d3q/tornado-restplus',
     author='Zdzislaw Krajewski',
     author_email='zdzislaw.krajewski@protonmail.ch',
