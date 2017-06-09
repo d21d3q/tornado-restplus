@@ -1,4 +1,9 @@
-from distutils.core import setup
+from setuptools import setup
+
+
+tests_require = ['pytest', 'pytest-cov']
+setup_requires = ['pytest-runner']
+install_requires = ['tornado', 'apispec']
 
 setup(
     name='tornado-restplus',
@@ -7,6 +12,9 @@ setup(
     author='Zdzislaw Krajewski',
     author_email='zdzislaw.krajewski@protonmail.ch',
     packages=['tornado_restplus'],
+    setup_requires=setup_requires,
+    install_requires=install_requires,
+    tests_require=tests_require,
     license='MIT',
     long_description=open('README.md').read(),
 )
