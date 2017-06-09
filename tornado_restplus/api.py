@@ -2,6 +2,7 @@ import logging
 from apispec import APISpec
 
 from .namespace import Namespace
+from .utils import make_path_chunk
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ class Api(object):
                  authorizations=None, security=None, doc='/',
                  default='default',  # default_id=default_id,
                  default_label='Default namespace', validate=None,
-                 tags=None,
+                 tags=None, prefix='',
                  default_mediatype='application/json', decorators=None,
                  catch_all_404s=False, serve_challenge_on_401=False,
                  format_checker=None,
@@ -30,20 +31,20 @@ class Api(object):
         self.authorizations = authorizations
         # self.security = security
         # self.default_id = default_id
-        self._validate = validate
+        # self._validate = validate
         self._doc = doc
-        self._doc_view = None
-        self._default_error_handler = None
+        # self._doc_view = None
+        # self._default_error_handler = None
         self.tags = tags or []
 
         # self.error_handlers = {
         #     ParseError: mask_parse_error_handler,
         #     MaskError: mask_error_handler,
         # }
-        self._schema = None
-        self.models = {}
-        self._refresolver = None
-        self.format_checker = format_checker
+        # self._schema = None
+        # self.models = {}
+        # self._refresolver = None
+        # self.format_checker = format_checker
         self.namespaces = []
         self.default_namespace = self.namespace(default, default_label,
                                                 endpoint='{0}-declaration'
@@ -55,12 +56,13 @@ class Api(object):
         self.spec = APISpec(title, version, plugins=['apispec.ext.tornado'])
         # self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
+        self.prefix = make_path_chunk(prefix)
         # self.default_mediatype = default_mediatype
         # self.decorators = decorators if decorators else []
         # self.catch_all_404s = catch_all_404s
         # self.serve_challenge_on_401 = serve_challenge_on_401
         # self.blueprint_setup = None
-        self.endpoints = set()
+        # self.endpoints = set()
         self.resources = []
         self.app = None
         # self.blueprint = None
@@ -152,16 +154,34 @@ class Api(object):
         self.add_namespace(ns)
         return ns
 
+    def _complete_url(self, url_part):
+        '''
+        This method adds to url api specifit prefix.
+
+        :param url_part: The part of the url the endpoint is registered with
+        '''
+        return ''.join([self.prefix, url_part])
+
     def register_resource(self, namespace, resource, *urls, **kwargs):
         urlspecs = []
+        doc = kwargs.pop('_doc', None)
         for url in urls:
+            url = self._complete_url(url)
             urlspecs.append((url, resource, kwargs))
+
+        if doc is not None:
+            if isinstance(doc, bool):
+                if doc:
+                    for urlspec in urlspecs:
+                        self.spec.add_path(urlspec=urlspec)
+            else:
+                # TODO handle documentation as string?
+                pass
 
         if self.app is not None:
             self._register_view(self.app, urlspecs)
         else:
             self.resources.extend(urlspecs)
-        return urlspecs
 
     def _register_view(self, app, urlspecs):
         app.add_handlers(r'.*', urlspecs)

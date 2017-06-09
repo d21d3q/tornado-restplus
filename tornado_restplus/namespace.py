@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from .utils import make_path_chunk
 
 
 class Namespace(object):
@@ -10,16 +11,18 @@ class Namespace(object):
 
     :param str name: The namespace name
     :param str description: An optionale short description
-    :param str path: An optional prefix path. If not provided, prefix is ``/+name``
+    :param str path: An optional prefix path. If not provided, prefix is
+                     ``/+name``
     :param list decorators: A list of decorators to apply to each resources
-    :param bool validate: Whether or not to perform validation on this namespace
+    :param bool validate: Whether or not to perform validation on this
+                          namespace
     :param Api api: an optional API to attache to the namespace
     '''
     def __init__(self, name, description=None, path=None, decorators=None,
                  validate=None, **kwargs):
         self.name = name
         self.description = description
-        self._path = path
+        self._path = make_path_chunk(path) if path else None
 
         self._schema = None
         self._validate = validate
@@ -65,32 +68,15 @@ class Namespace(object):
             namespace.add_resource(FooSpecial, '/special/foo', endpoint="foo")
         '''
         self.resources.append((resource, urls, kwargs))
-        urlspecs = []
         for api in self.apis:
             ns_urls = api.ns_urls(self, urls)
-            urlspecs.extend(api.register_resource(self, resource, *ns_urls,
-                                                  **kwargs))
-        return urlspecs
+            api.register_resource(self, resource, *ns_urls, **kwargs)
 
     def route(self, *urls, **kwargs):
         '''
         A decorator to route resources.
         '''
         def wrapper(cls):
-            # if 'doc' in kwargs:
-            #     self._handle_api_doc(cls, doc)
-            doc = kwargs.pop('doc', None)
-            urlspecs = self.add_resource(cls, *urls, **kwargs)
-            if doc is not None:
-                if isinstance(doc, bool):
-                    if doc:
-                        for urlspec in urlspecs:
-                            for api in self.apis:
-                                api.spec.add_path(urlspec=urlspec)
-                    else:
-                        pass
-                else:
-                    # TODO handle documentation as string?
-                    pass
+            self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper

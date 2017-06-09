@@ -8,6 +8,8 @@ venv/
 
 # Unit test / coverage reports
 .cache
+.coverage
+htmlcov/
 
 # Distribution / packaging
 .Python

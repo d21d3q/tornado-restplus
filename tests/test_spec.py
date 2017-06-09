@@ -14,7 +14,7 @@ class SpecTest(TestCase):
 
     def test_route_spec(self):
 
-        @self.ns.route('/path', doc=True)
+        @self.ns.route('/path', _doc=True)
         class SomeHandler(BaseEchoHandler):
             def get():
                 '''Get a greeting endpoint.
@@ -29,7 +29,7 @@ class SpecTest(TestCase):
             def post():
                 pass
 
-        @self.ns.route('/another_path', doc=True)
+        @self.ns.route('/another_path', _doc=True)
         class AnotherHandler(BaseEchoHandler):
             def get():
                 '''Get a greeting endpoint.
@@ -41,6 +41,7 @@ class SpecTest(TestCase):
                                      handler
                 '''
                 pass
+
         doc = self.api.spec.to_dict()
         assert doc['info']['title'] == 'Api title'
         assert '/api/path' in doc['paths']
@@ -49,3 +50,23 @@ class SpecTest(TestCase):
         assert '/api/another_path' in doc['paths']
         assert doc['paths']['/api/another_path']['get']['description'] == \
             'Get a greeting from another handler'
+
+    def test_route_without_spec(self):
+        @self.ns.route('/path', _doc=False)
+        class SomeHandler(BaseEchoHandler):
+            def get():
+                '''Get a greeting endpoint.
+                ---
+                description: Get a greeting
+                responses:
+                    200:
+                        description: A greeting to the client
+                '''
+                pass
+
+            def post():
+                pass
+
+        doc = self.api.spec.to_dict()
+        assert doc['info']['title'] == 'Api title'
+        assert '/api/path' not in doc['paths']
