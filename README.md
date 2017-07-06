@@ -13,4 +13,5 @@ swagger stuff since they seem to work with tornado (and each other)
 
 ## What works for now
 
-* Namespaces, routing
+* Namespaces with routing,
+* generating swagger json extracted from comments
