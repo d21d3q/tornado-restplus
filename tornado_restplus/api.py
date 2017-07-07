@@ -53,7 +53,9 @@ class Api(object):
                                                 api=self,
                                                 path='/')
         self.ns_paths = dict()
-        self.spec = APISpec(title, version, plugins=['apispec.ext.tornado'])
+        self.spec = APISpec(title, version,
+                            plugins=['apispec.ext.tornado',
+                                     'apispec.ext.marshmallow'])
         # self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = make_path_chunk(prefix)
@@ -144,6 +146,10 @@ class Api(object):
             self.register_resource(ns, resource, *self.ns_urls(ns, urls),
                                    **kwargs)
 
+        for definition in ns.definitions:
+            args, kwargs = definition
+            self.spec.definition(*args, **kwargs)
+
     def namespace(self, *args, **kwargs):
         '''
         A namespace factory.
@@ -185,3 +191,6 @@ class Api(object):
 
     def _register_view(self, app, urlspecs):
         app.add_handlers(r'.*', urlspecs)
+
+    def definition(self, *args, **kwargs):
+        self.spec.definition(*args, **kwargs)

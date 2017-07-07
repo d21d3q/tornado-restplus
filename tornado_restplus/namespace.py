@@ -23,14 +23,9 @@ class Namespace(object):
         self.name = name
         self.description = description
         self._path = make_path_chunk(path) if path else None
-
-        self._schema = None
-        self._validate = validate
-        self.models = {}
-        # self.urls = {}
-        # self.decorators = decorators if decorators else []
+        self.definitions = []
         self.resources = []
-        self.error_handlers = {}
+        # self.error_handlers = {}
         self.default_error_handler = None
         self.apis = []
         if 'api' in kwargs:
@@ -80,3 +75,8 @@ class Namespace(object):
             self.add_resource(cls, *urls, **kwargs)
             return cls
         return wrapper
+
+    def definition(self, *args, **kwargs):
+        self.definitions.append((args, kwargs))
+        for api in self.apis:
+            api.spec.definition(*args, **kwargs)

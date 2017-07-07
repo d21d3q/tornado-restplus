@@ -3,11 +3,11 @@ from setuptools import setup
 
 tests_require = ['pytest', 'pytest-cov']
 setup_requires = ['pytest-runner']
-install_requires = ['tornado', 'apispec']
+install_requires = ['tornado>=4.5.1', 'apispec>=0.22.0', 'marshmallow>=2.13.5']
 
 setup(
     name='tornado-restplus',
-    version='0.0.1dev0',
+    version='0.0.1.dev0',
     url='https://github.com/d21d3q/tornado-restplus',
     author='Zdzislaw Krajewski',
     author_email='zdzislaw.krajewski@protonmail.ch',
