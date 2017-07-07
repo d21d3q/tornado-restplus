@@ -7,7 +7,7 @@ install_requires = ['tornado>=4.5.1', 'apispec>=0.22.0', 'marshmallow>=2.13.5']
 
 setup(
     name='tornado-restplus',
-    version='0.0.1.dev0',
+    version='0.0.1.dev1',
     url='https://github.com/d21d3q/tornado-restplus',
     author='Zdzislaw Krajewski',
     author_email='zdzislaw.krajewski@protonmail.ch',
